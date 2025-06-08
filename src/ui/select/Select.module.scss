@@ -78,7 +78,11 @@
 }
 
 .option:hover {
-	background: var(--grey, #c4c4c4);
+	background: var(--grey, #eeeeee);
+}
+
+.option:active {
+	background: var(#d7d7d7);
 }
 
 @mixin option-color-before {
