@@ -13,7 +13,7 @@ import styles from 'src/styles/index.module.scss';
 и установлены в коде в дефолтные значения.*/
 
 export const App = () => {
-	const [appState, setAppState] =
+	const [currentArticleState, setArticleState] =
 		useState<ArticleStateType>(defaultArticleState);
 
 	return (
@@ -21,14 +21,17 @@ export const App = () => {
 			className={clsx(styles.main)}
 			style={
 				{
-					'--font-family': appState.fontFamilyOption.value,
-					'--font-size': appState.fontSizeOption.value,
-					'--font-color': appState.fontColor.value,
-					'--container-width': appState.contentWidth.value,
-					'--bg-color': appState.backgroundColor.value,
+					'--font-family': currentArticleState.fontFamilyOption.value,
+					'--font-size': currentArticleState.fontSizeOption.value,
+					'--font-color': currentArticleState.fontColor.value,
+					'--container-width': currentArticleState.contentWidth.value,
+					'--bg-color': currentArticleState.backgroundColor.value,
 				} as CSSProperties
 			}>
-			<ArticleParamsForm currentState={appState} setAppState={setAppState} />
+			<ArticleParamsForm
+				currentArticleState={currentArticleState}
+				setArticleState={setArticleState}
+			/>
 			<Article />
 		</div>
 	);

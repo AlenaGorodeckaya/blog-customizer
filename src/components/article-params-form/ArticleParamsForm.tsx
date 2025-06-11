@@ -22,43 +22,44 @@ import { Separator } from 'src/ui/separator';
 
 type ArticleParamsFormProps = {
 	// Текущее состояние страницы
-	currentState: ArticleStateType;
-	setAppState: (state: ArticleStateType) => void;
+	currentArticleState: ArticleStateType;
+	setArticleState: (state: ArticleStateType) => void;
 };
 
 export const ArticleParamsForm = ({
-	currentState,
-	setAppState,
+	currentArticleState,
+	setArticleState,
 }: ArticleParamsFormProps) => {
 	// Состояние открытия/закрытия сайдбара
-	const [isOpen, setIsOpen] = useState(false);
-	// Локальное состояние формы (синхронизируется с currentState при открытии)
-	const [formState, setFormState] = useState<ArticleStateType>(currentState);
+	const [isFormOpen, setIsFormOpen] = useState(false);
+	// Локальное состояние формы (синхронизируется с currentArticleState при открытии)
+	const [formSettings, setFormSettings] =
+		useState<ArticleStateType>(currentArticleState);
 	// Реф для сайдбара (для обработки клика вне формы)
-	const rootRef = useRef<HTMLDivElement>(null);
+	const formSidebarRef = useRef<HTMLDivElement>(null);
 
-	/* Реализует: "При нажатии на «стрелку» открывается сайдбар с настройками,
-  при повторном нажатии или клике вне сайдбар закрывается."*/
+	// Обработчик кликов вне формы
 	useOutsideClickClose({
-		isOpen,
-		rootRef,
-		onChange: setIsOpen, // Закрытие при клике вне формы
+		isOpen: isFormOpen,
+		rootRef: formSidebarRef,
+		onChange: setIsFormOpen,
+		onClose: () => setIsFormOpen(false),
 	});
 
 	// Обработчик переключения состояния формы (открыть/закрыть)
-	const handleToggleForm = useCallback(() => {
-		setIsOpen(!isOpen);
-		if (!isOpen) {
-			setFormState(currentState);
+	const toggleFormVisibility = useCallback(() => {
+		setIsFormOpen(!isFormOpen);
+		if (!isFormOpen) {
+			setFormSettings(currentArticleState);
 		}
-	}, [isOpen, currentState]);
+	}, [isFormOpen, currentArticleState]);
 
 	// Обработчик изменений
 	/* Реализует: "При изменении настроек в сайдбаре они не применяются сразу."
   Изменения сохраняются только во временном состоянии формы"*/
-	const handleChange = useCallback(
+	const handleSettingChange = useCallback(
 		(field: keyof ArticleStateType) => (option: OptionType) => {
-			setFormState((prev) => ({
+			setFormSettings((prev) => ({
 				...prev,
 				[field]: option,
 			}));
@@ -69,68 +70,70 @@ export const ArticleParamsForm = ({
 	// Обработчик сброса настроек
 	/* Реализует: При нажатии «сбросить» настройки в форме сбрасываются на начальные,
   которые были при открытии страницы, и стили применяются к статье.*/
-	const handleReset = useCallback(() => {
-		setFormState(defaultArticleState);
-		setAppState(defaultArticleState);
-		setIsOpen(false);
-	}, [setAppState]);
+	const resetSettings = useCallback(() => {
+		setFormSettings(defaultArticleState);
+		setArticleState(defaultArticleState);
+		setIsFormOpen(false);
+	}, [setArticleState]);
 
 	// Обработчик применения изменений
 	// Реализует: "После нажатия на «применить» стили применяются к статье"
-	const handleApply = useCallback(
+	const applySettings = useCallback(
 		(e: React.FormEvent) => {
 			e.preventDefault();
-			setAppState(formState);
-			setIsOpen(false);
+			setArticleState(formSettings);
+			setIsFormOpen(false);
 		},
-		[formState, setAppState]
+		[formSettings, setArticleState]
 	);
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={handleToggleForm} />
+			<ArrowButton isOpen={isFormOpen} onClick={toggleFormVisibility} />
 
 			<aside
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}
-				ref={rootRef}>
+				className={clsx(styles.container, {
+					[styles.container_open]: isFormOpen,
+				})}
+				ref={formSidebarRef}>
 				<form
 					className={styles.form}
-					onSubmit={handleApply}
-					onReset={handleReset}>
+					onSubmit={applySettings}
+					onReset={resetSettings}>
 					<Text size={31} weight={800} uppercase={true}>
 						Задайте параметры
 					</Text>
 					<Select
 						title='Шрифт'
-						selected={formState.fontFamilyOption}
+						selected={formSettings.fontFamilyOption}
 						options={fontFamilyOptions}
-						onChange={handleChange('fontFamilyOption')}
+						onChange={handleSettingChange('fontFamilyOption')}
 					/>
 					<RadioGroup
 						title='Размер шрифта'
 						name='fontSize'
 						options={fontSizeOptions}
-						selected={formState.fontSizeOption}
-						onChange={handleChange('fontSizeOption')}
+						selected={formSettings.fontSizeOption}
+						onChange={handleSettingChange('fontSizeOption')}
 					/>
 					<Select
 						title='Цвет текста'
-						selected={formState.fontColor}
+						selected={formSettings.fontColor}
 						options={fontColors}
-						onChange={handleChange('fontColor')}
+						onChange={handleSettingChange('fontColor')}
 					/>
 					<Separator />
 					<Select
 						title='Цвет фона'
-						selected={formState.backgroundColor}
+						selected={formSettings.backgroundColor}
 						options={backgroundColors}
-						onChange={handleChange('backgroundColor')}
+						onChange={handleSettingChange('backgroundColor')}
 					/>
 					<Select
 						title='Ширина контента'
-						selected={formState.contentWidth}
+						selected={formSettings.contentWidth}
 						options={contentWidthArr}
-						onChange={handleChange('contentWidth')}
+						onChange={handleSettingChange('contentWidth')}
 					/>
 					<div className={styles.bottomContainer}>
 						<Button title='Сбросить' type='clear' htmlType='reset' />
